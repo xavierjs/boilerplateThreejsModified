@@ -1,0 +1,8 @@
+body {
+	margin: 0px;
+	overflow: hidden;
+} 
+
+.webglCanvas {
+	position; absolute; top: 0px; left: 0px;
+}

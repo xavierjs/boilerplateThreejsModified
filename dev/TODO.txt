@@ -1,0 +1,7 @@
+- picking *
+- DAT.GUI *
+- README :
+  - conventions de nommage
+  - refs (three.JS doc, etc)
+  - syntaxe JSlint
+  
