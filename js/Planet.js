@@ -16,6 +16,11 @@ var Planet=(function(){
 				    _ThreePlanetObject=stuff.children[0];
 				    //window.zou=_ThreePlanetObject;
 				    _ThreePlanetObject.position.set(-10,3,0); //put it on the left
+
+				    //WE ADD THE TEXTURE
+				    var texture=new THREE.TextureLoader(spec.loadingManager).load('assets/textures/debug.jpg');
+				    _ThreePlanetObject.material.map=texture;
+
 				});
 			});
 
