@@ -88,6 +88,9 @@ var Main=(function(){ //closure
 			Skybox.init({
 				loadingManager: _ThreeLoadingManager
 			});
+			Planet.init({
+				loadingManager: _ThreeLoadingManager
+			});
 			
 			
 			//auto resize canvas if window size change
@@ -101,7 +104,7 @@ var Main=(function(){ //closure
 				//all drawed objects :
 				var allThreeObjects=Lights.get_sceneObjects()
 									.concat(Ground.get_sceneObjects())
-									.concat(Tux.get_sceneObjects(), Epee.get_sceneObjects(), Skybox.get_sceneObjects());
+									.concat(Tux.get_sceneObjects(), Epee.get_sceneObjects(), Skybox.get_sceneObjects(), Planet.get_sceneObjects());
 				_ThreeScene.add.apply(_ThreeScene, allThreeObjects);
 
 				//objects which are pickables :
