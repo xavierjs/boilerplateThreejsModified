@@ -10,9 +10,17 @@ var Interactor=(function(){
 	var _rotY=0; //camera rotation left/right
   	var _DOMcanvas;
   	var _ThreeViewportVector, _ThreeDirectionVector, _ThreeRaycaster; //picking variables
-  	var _ThreeCameraPosition;
+  	//var _ThreeCameraPosition;
+  	var _position_initial, _transitionCoeff;
   	var _isDrag=false;
   	var _oldX, _oldY, _dX=0, _dY=0; //rotation variables
+
+  	var _states={
+  		FPS: 0,
+  		orbital: 1,
+  		transition: 2
+  	};
+  	var _state=_states.FPS;
 
 	//private functions
 	function keyUpDown(keycode, sensibility) {
@@ -36,6 +44,16 @@ var Interactor=(function(){
 
 	    } //end switch keycode
 	}; //end keyUpDown()
+
+
+	function compute_orbitalPosition(camera){
+		var centreOrbite=new THREE.Vector3(0,0,0);
+
+		var zCamera=new THREE.Vector3(0,0,1); //vecteur Z (arrière) dans referentiel caméra
+		zCamera.applyQuaternion(camera.quaternion); //vecteur Z dans référentiel scene/world
+		zCamera.multiplyScalar(50); //rayon de l'orbite
+		return zCamera.add(centreOrbite);
+	}
 	
 	var that={
 		init: function(spec){
@@ -43,8 +61,9 @@ var Interactor=(function(){
 		  _DOMcanvas=spec.canvas;
 
 		  //instantiate Three.JS stuffs :
-		  _ThreeCameraPosition=new THREE.Vector3(0,5,20);
-		  Main.add_toggable(_ThreeCameraPosition, 'y', 'cameraPositionY');
+		  //_ThreeCameraPosition=new THREE.Vector3(0,5,20);
+		  //Main.add_toggable(_ThreeCameraPosition, 'y', 'cameraPositionY');
+		  
 		  _ThreeDirectionVector=new THREE.Vector3();
 		  //_ThreeProjector = new THREE.Projector();
   		  _ThreeRaycaster = new THREE.Raycaster();
@@ -117,26 +136,67 @@ var Interactor=(function(){
 		}, //end init()
 
 		update_cinematics: function(){
-			var cos=Math.cos(_rotY);
-		    var sin=Math.sin(_rotY);
+			var camera=Camera.get_renderCamera(); //instance de THREE.Camera
+				    
+			switch(_state){
+				case _states.FPS:
+					var cos=Math.cos(_rotY);
+				    var sin=Math.sin(_rotY);
 
-		    _ThreeCameraPosition.x+=_speedX*cos+_speedZ*sin;
-		    _ThreeCameraPosition.z+=_speedX*-sin+_speedZ*cos;
-		    
-		    _rotY-=_dX*SETTINGS.mouseSensibilityX;
-		    _rotX-=_dY*SETTINGS.mouseSensibilityY;
+				    camera.position.x+=_speedX*cos+_speedZ*sin;
+				    camera.position.z+=_speedX*-sin+_speedZ*cos;
+				    
+				    _rotY-=_dX*SETTINGS.mouseSensibilityX;
+				    _rotX-=_dY*SETTINGS.mouseSensibilityY;
 
-		    if (!_isDrag) { //rotation movement amortization
-		      _dX*=0.9, _dY*=0.9;
-		    }
+				    if (!_isDrag) { //rotation movement amortization
+				      _dX*=0.9, _dY*=0.9;
+				    }
+
+				    camera.rotation.set(0,0,0);
+					camera.rotateY(_rotY);
+					camera.rotateX(_rotX);
+				    break;
+
+				case _states.orbital:
+					//rotate la caméra (rotation)
+					camera.rotation.set(0,0,0);
+					_rotY-=_dX*SETTINGS.mouseSensibilityX;
+				    _rotX-=_dY*SETTINGS.mouseSensibilityY;
+				    camera.rotateY(_rotY);
+					camera.rotateX(_rotX);
+
+					//recule la caméra (position) 
+					var position_orbital=compute_orbitalPosition(camera);
+					camera.position.copy(position_orbital);
+
+					//debugger;
+
+					break;
+
+				case _states.transition: //transition FPS -> Orbital
+					var position_orbital=compute_orbitalPosition(camera);
+					_transitionCoeff+=0.01; //0-> debut de la transition, 1-> fin de la transition
+
+					if (_transitionCoeff>=1){ //transition is over
+						console.log('TRANSITION IS OVER');
+						_transitionCoeff=1;
+						_state=_states.orbital;
+					}
+
+					//interpolation linéaire entre les positions initiales et finales
+					camera.position.copy(_position_initial.clone().multiplyScalar(1-_transitionCoeff));
+					camera.position.add(position_orbital.multiplyScalar(_transitionCoeff));
+
+					break;
+
+			} //end switch
 		},
 
-		get_cameraPosition: function(){
-			return _ThreeCameraPosition;
-		},
-
-		get_cameraRotation: function(){
-			return [_rotX, _rotY];
+		switch_orbital: function(isOrbital){ //directly called from the DOM button
+			_position_initial=Camera.get_renderCamera().position.clone(); //position au début du déplacement
+			_transitionCoeff=0;
+			_state=(isOrbital)?_states.transition:_states.FPS;
 		}
 
 	}; //end that

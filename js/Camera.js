@@ -15,6 +15,8 @@ var Camera=(function(){ //begin closure
 
 			//create the camera
 			_threeMainCamera = new THREE.PerspectiveCamera(35, _DOMcanvas.width / _DOMcanvas.height, 1, 1000 );
+			_threeMainCamera.position.set(0,5,20);
+		  //Main.add_toggable(_ThreeCameraPosition, 'y', 'cameraPositionY');
 		},
 
 		get_position: function(){
@@ -32,12 +34,13 @@ var Camera=(function(){ //begin closure
 
 		update_cinematics: function(){
 			//synchronise the camera position with the interactor :
-			_threeMainCamera.position.copy(Interactor.get_cameraPosition());
+			// --> déménagé dans l'interactor car propre au mode FPS
+			/*_threeMainCamera.position.copy(Interactor.get_cameraPosition());
 
 			_threeMainCamera.rotation.set(0,0,0);
 			var rotXY=Interactor.get_cameraRotation();
 			_threeMainCamera.rotateY(rotXY[1]);
-			_threeMainCamera.rotateX(rotXY[0]);
+			_threeMainCamera.rotateX(rotXY[0]);*/
 		}
 	}; //end that
 
