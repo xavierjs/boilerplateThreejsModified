@@ -18,9 +18,12 @@ var Interactor=(function(){
   	var _states={
   		FPS: 0,
   		orbital: 1,
-  		transition: 2
+  		transition: 2,
+  		splineMove: 3,
+  		blocked: 4
   	};
   	var _state=_states.FPS;
+  	var _spline, _stateRestored;
 
 	//private functions
 	function keyUpDown(keycode, sensibility) {
@@ -187,6 +190,22 @@ var Interactor=(function(){
 					//interpolation linéaire entre les positions initiales et finales
 					camera.position.copy(_position_initial.clone().multiplyScalar(1-_transitionCoeff));
 					camera.position.add(position_orbital.multiplyScalar(_transitionCoeff));
+					break;
+
+				case _states.splineMove:
+					//le coeff de transition va de 0 (premier point de la spline à 1 -> le dernier)
+					_transitionCoeff+=0.01; //ou on en est sur la spline ?
+					if (_transitionCoeff>=1){ //transition is over
+						console.log('SPLINE DISPLACEMENT');
+						_transitionCoeff=1;
+						_state=_states.blocked;
+					}
+
+					//_spline
+					//debugger;
+					camera.position.copy(_spline.getPointAt(_transitionCoeff));
+					var cameraDirection=_spline.getTangentAt(_transitionCoeff);
+					camera.lookAt(cameraDirection);
 
 					break;
 
@@ -197,6 +216,23 @@ var Interactor=(function(){
 			_position_initial=Camera.get_renderCamera().position.clone(); //position au début du déplacement
 			_transitionCoeff=0;
 			_state=(isOrbital)?_states.transition:_states.FPS;
+		},
+
+		start_splineMovement: function(){
+			_stateRestored=_state;
+			_state=_states.splineMove;
+
+			var cam=Camera.get_renderCamera();
+			var points=[
+				cam.position,
+				cam.position.clone().add(new THREE.Vector3(0,10,0)),
+				cam.position.clone().add(new THREE.Vector3(0, 0,10)),
+				cam.position.clone().add(new THREE.Vector3(20, 1,10))
+			];
+
+			_spline=new THREE.CatmullRomCurve3(points); //Spline
+			_transitionCoeff=0;
+			debugger;
 		}
 
 	}; //end that
